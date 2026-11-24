@@ -1,0 +1,27 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif; background: #f4f6f0; color: #1c2b1a; line-height: 1.55; }
+.hero { background: #1b5e20; color: #fff; padding: 2rem 1rem 1.5rem; text-align: center; }
+.hero h1 { margin: 0 0 .4rem; font-size: 2rem; }
+.hero .hi { font-size: 1.2rem; font-weight: 400; }
+.hero .tagline { margin: .3rem auto; max-width: 640px; font-size: 1.05rem; }
+.hero .note { margin: .6rem auto 0; max-width: 640px; font-size: .85rem; opacity: .85; }
+main { max-width: 820px; margin: 0 auto; padding: 1rem; }
+.card { background: #fff; border-radius: 12px; padding: 1.2rem 1.3rem; margin: 1rem 0; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+h2 { margin-top: 0; font-size: 1.25rem; }
+.askrow { display: flex; gap: .5rem; flex-wrap: wrap; }
+input[type="text"] { flex: 1; min-width: 220px; padding: .7rem .8rem; font-size: 1rem; border: 2px solid #a5d6a7; border-radius: 8px; }
+button { background: #2e7d32; color: #fff; border: none; padding: .7rem 1.1rem; font-size: 1rem; border-radius: 8px; cursor: pointer; }
+button:hover { background: #1b5e20; }
+.chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: .9rem 0 .4rem; }
+.chip { background: #fff; color: #1c2b1a; border: 2px solid #999; padding: .35rem .7rem; font-size: .85rem; border-radius: 999px; }
+.result { margin-top: .8rem; }
+.answer { background: #f1f8e9; border-radius: 8px; padding: .9rem 1rem; }
+.answer h3 { margin: 0 0 .4rem; }
+.muted { color: #5f6b5a; font-size: .9rem; }
+.browse ul.itemlist, .card ul { padding-left: 1.2rem; }
+.browse li { margin: .3rem 0; }
+#quiz ol li { margin: .8rem 0; }
+#quiz label { display: inline-block; margin: .15rem .4rem .15rem 0; font-size: .9rem; }
+footer { text-align: center; color: #5f6b5a; font-size: .85rem; padding: 1rem; }
+a { color: #1b5e20; }
+@media (max-width: 560px) { .hero h1 { font-size: 1.5rem; } }

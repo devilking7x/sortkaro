@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SortKaro — Waste Sorting Helper for India</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header class="hero">
+  <h1>SortKaro <span class="hi">— कचरा सही डिब्बे में</span></h1>
+  <p class="tagline">Which bin does it go in? Ask in English or Hindi — get the bin, the reason, and what to do next.</p>
+  <p class="note">Built for Arbiter Hacks V1 — Theme Track: Rethinking Waste. Rules follow the bins most Indian cities use (Solid Waste Management Rules 2016). Your city may differ — the app says so where it matters.</p>
+</header>
+
+<main>
+  <section class="card" id="ask">
+    <h2>1. Ask about an item</h2>
+    <div class="askrow">
+      <input id="q" type="text" placeholder="e.g. banana peel, purana mobile, CFL bulb, akhbaar…" autocomplete="off">
+      <button id="askBtn">Which bin?</button>
+    </div>
+    <div class="chips" id="catChips"></div>
+    <div id="result" class="result" aria-live="polite"></div>
+    <div id="browse" class="browse"></div>
+  </section>
+
+  <section class="card" id="quizCard">
+    <h2>2. Test yourself — the 10-item sorting quiz</h2>
+    <p>Pick the right bin for 10 random household items. This is also how we measure whether SortKaro works: the quiz below is scored, and the classifier is tested on 20 item names it has never seen (see <a href="#eval">evaluation</a>).</p>
+    <button id="startQuiz">Start the quiz</button>
+    <div id="quiz"></div>
+    <p id="bestScore" class="muted"></p>
+  </section>
+
+  <section class="card" id="eval">
+    <h2>How we measured it</h2>
+    <ul>
+      <li><strong>Classifier:</strong> 20 item names that are <em>not</em> in the 73-item list, each with a known correct bin. Result: <strong id="heldOutLine">…</strong> (recomputed live in your browser — open DevTools and run <code>SortKaro.evaluateHeldOut()</code>).</li>
+      <li><strong>Quiz:</strong> 10 random items from the list; your score is shown immediately and your best score is saved on this device only.</li>
+      <li><strong>Rules:</strong> every bin rule comes from the Solid Waste Management Rules 2016 and common ULB practice (green = wet/compostable, blue = dry/recyclable, red = hazardous, separate e-waste collection, yellow bag = sanitary). Cities differ — check your local collector for the grey areas.</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Honest limits</h2>
+    <ul>
+      <li>SortKaro is a <strong>guide, not a government rulebook</strong>. Bin colours and rules vary by city and by housing society — when the app says “check locally”, it means it.</li>
+      <li>The classifier is <strong>rule-based, not AI</strong>: a 73-item hand-built list plus keyword rules. It does not recognise photos, brands, or items outside its list — it says “not sure” instead of guessing.</li>
+      <li>Nothing leaves your browser. No account, no server, no tracking. Your quiz best score is stored only in this browser's localStorage.</li>
+    </ul>
+  </section>
+</main>
+
+<footer>
+  <p>SortKaro — solo entry by Mohd Raja (devilking7x) for Arbiter Hacks V1. Source: <a href="https://github.com/devilking7x/sortkaro">github.com/devilking7x/sortkaro</a> (MIT).</p>
+</footer>
+
+<script src="app.js"></script>
+<script>
+(function () {
+  const S = window.SortKaro;
+  const q = document.getElementById('q');
+  const result = document.getElementById('result');
+  const browse = document.getElementById('browse');
+  const chips = document.getElementById('catChips');
+
+  Object.values(S.CATEGORIES).filter(c => c.id !== 'unknown').forEach(c => {
+    const b = document.createElement('button');
+    b.className = 'chip';
+    b.style.borderColor = c.colour;
+    b.textContent = c.short;
+    b.onclick = () => showList(c.id);
+    chips.appendChild(b);
+  });
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch])); }
+
+  function showAnswer(r, query) {
+    const c = S.CATEGORIES[r.cat];
+    let html = '<div class="answer" style="border-left:6px solid ' + c.colour + '">';
+    html += '<h3>' + esc(query) + ' → <span style="color:' + c.colour + '">' + esc(c.label) + '</span></h3>';
+    html += '<p>' + esc(r.reason) + '</p>';
+    if (r.item) {
+      html += '<p><strong>What to do:</strong> ' + esc(r.item.tip) + '</p>';
+      html += '<p class="muted">Matched: ' + esc(r.item.name) + ' (' + esc(r.item.hi) + ') — ' + esc(r.method) + ' match.</p>';
+    } else if (r.method === 'keyword') {
+      html += '<p class="muted">Matched by keyword rule — not an exact list entry.</p>';
+    } else {
+      html += '<p class="muted">Not in our list of ' + S.ITEMS.length + ' items. The app says “not sure” instead of guessing.</p>';
+    }
+    html += '</div>';
+    result.innerHTML = html;
+  }
+
+  function ask() {
+    const query = q.value.trim();
+    if (!query) { result.innerHTML = '<p class="muted">Type an item name first — try “banana peel” or “purana mobile”.</p>'; return; }
+    showAnswer(S.classify(query), query);
+  }
+  document.getElementById('askBtn').onclick = ask;
+  q.addEventListener('keydown', e => { if (e.key === 'Enter') ask(); });
+
+  function showList(cat) {
+    const c = S.CATEGORIES[cat];
+    const items = S.itemsByCategory(cat);
+    let html = '<h3>' + esc(c.label) + ' — ' + items.length + ' items</h3><p>' + esc(c.desc) + '</p><ul class="itemlist">';
+    items.forEach(it => { html += '<li><strong>' + esc(it.name) + '</strong> <span class="muted">(' + esc(it.hi) + ')</span> — ' + esc(it.why) + '</li>'; });
+    html += '</ul>';
+    browse.innerHTML = html;
+  }
+  showList('wet');
+
+  // Held-out line, computed live.
+  const ev = S.evaluateHeldOut();
+  document.getElementById('heldOutLine').textContent =
+    ev.correct + '/' + ev.total + ' correct (' + Math.round(ev.accuracy * 100) + '%)';
+
+  // Quiz
+  const quizDiv = document.getElementById('quiz');
+  const bestEl = document.getElementById('bestScore');
+  const BEST_KEY = 'sortkaro-best';
+  function showBest() {
+    const best = localStorage.getItem(BEST_KEY);
+    bestEl.textContent = best === null ? 'No quiz taken yet on this device.' : 'Your best score on this device: ' + best + '/10.';
+  }
+  showBest();
+  document.getElementById('startQuiz').onclick = () => {
+    const quiz = S.makeQuiz(10);
+    const cats = ['wet', 'dry', 'hazardous', 'ewaste', 'sanitary', 'other'];
+    let html = '<ol>';
+    quiz.forEach((item, i) => {
+      html += '<li><strong>' + esc(item.name) + '</strong> <span class="muted">(' + esc(item.hi) + ')</span><br>';
+      cats.forEach(cat => {
+        html += '<label><input type="radio" name="q' + i + '" value="' + cat + '"> ' + esc(S.CATEGORIES[cat].short) + '</label> ';
+      });
+      html += '</li>';
+    });
+    html += '</ol><button id="gradeBtn">Check my score</button><div id="quizResult"></div>';
+    quizDiv.innerHTML = html;
+    document.getElementById('gradeBtn').onclick = () => {
+      const answers = quiz.map((_, i) => {
+        const sel = quizDiv.querySelector('input[name="q' + i + '"]:checked');
+        return sel ? sel.value : null;
+      });
+      const g = S.gradeQuiz(quiz, answers);
+      let rh = '<p><strong>Score: ' + g.correct + '/' + g.total + '</strong></p><ul>';
+      g.detail.forEach(d => {
+        rh += '<li>' + (d.ok ? '✅' : '❌') + ' ' + esc(d.name) + ' — correct bin: ' + esc(S.CATEGORIES[d.expected].short) + (d.ok ? '' : ' (you picked: ' + esc(d.given ? S.CATEGORIES[d.given].short : 'nothing') + ')') + '</li>';
+      });
+      rh += '</ul>';
+      document.getElementById('quizResult').innerHTML = rh;
+      const prev = parseInt(localStorage.getItem(BEST_KEY) || '-1', 10);
+      if (g.correct > prev) localStorage.setItem(BEST_KEY, String(g.correct));
+      showBest();
+    };
+  };
+})();
+</script>
+</body>
+</html>
